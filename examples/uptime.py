@@ -54,7 +54,11 @@ import re
 p = pexpect.spawnu('uptime')
 
 # This parses uptime output into the major groups using regex group matching.
-p.expect(r'up\s+(.*?),\s+([0-9]+) users?,\s+load averages?: ([0-9]+\.[0-9][0-9]),?\s+([0-9]+\.[0-9][0-9]),?\s+([0-9]+\.[0-9][0-9])')
+#  20:01:52 up 3 days,  2:59,  2 users,  load average: 2.50, 2.38, 2.08
+#              0000000000000   1                       2222  3333  4444
+tmp = p.expect(r'up\s+(.*?),\s+([0-9]+) users?,\s+load averages?: ([0-9]+\.[0-9][0-9]),?\s+([0-9]+\.[0-9][0-9]),?\s+([0-9]+\.[0-9][0-9])')
+p.match: re.Match  # doesn't work in PyCharm
+# tmp = p.match  # type: re.Match  # also
 duration, users, av1, av5, av15 = p.match.groups()
 
 # The duration is a little harder to parse because of all the different
@@ -65,17 +69,18 @@ days = '0'
 hours = '0'
 mins = '0'
 if 'day' in duration:
-    p.match = re.search(r'([0-9]+)\s+day',duration)
-    days = str(int(p.match.group(1)))
+    m = re.search(r'([0-9]+)\s+day', duration)
+    days = str(int(m[1]))
 if ':' in duration:
-    p.match = re.search('([0-9]+):([0-9]+)',duration)
-    hours = str(int(p.match.group(1)))
-    mins = str(int(p.match.group(2)))
+    m = re.search('([0-9]+):([0-9]+)', duration)
+    hours = str(int(m[1]))
+    mins = str(int(m[2]))
 if 'min' in duration:
-    p.match = re.search(r'([0-9]+)\s+min',duration)
-    mins = str(int(p.match.group(1)))
+    m = re.search(r'([0-9]+)\s+min', duration)
+    mins = str(int(m[1]))
 
 # Print the parsed fields in CSV format.
 print('days, hours, minutes, users, cpu avg 1 min, cpu avg 5 min, cpu avg 15 min')
 print('%s, %s, %s, %s, %s, %s, %s' % (days, hours, mins, users, av1, av5, av15))
 
+exit(0)
